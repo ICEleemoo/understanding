@@ -32,16 +32,16 @@ void do_more(FILE *fp)
 	char 	line[LINELEN];
 	int 	num_of_lines = 0;
 	int 	see_more(), reply;
-	while ( fgets( line, LINELEN, fp) ) {
-		if ( num_of_lines == PAGELEN ) {
-			reply = see_more();
-			if (reply == 0 )
-				break;
-			num_of_lines -= reply;
+	while ( fgets( line, LINELEN, fp) ) {		/* more input */
+		if ( num_of_lines == PAGELEN ) {	/*full screen? */
+			reply = see_more();		/*y: ask user */
+			if (reply == 0 )		/*n: done */
+				break;			
+			num_of_lines -= reply;		/* reset count */
 		}
-		if ( fputs( line, stdout ) == EOF )
-			exit(1);
-		num_of_lines++;
+		if ( fputs( line, stdout ) == EOF )	/* show line */
+			exit(1);			/* or die */
+		num_of_lines++;				/* count it */
 	}
 }
 
@@ -52,14 +52,14 @@ void do_more(FILE *fp)
 int see_more()
 {
 	int 	c;
-	printf("\033[7m more? \033[m");
-	while ( ( c = getchar() ) != EOF )
+	printf("\033[7m more? \033[m");		/* reverse on vt100 */
+	while ( ( c = getchar() ) != EOF )	/* get response */
 	{
-		if ( c == 'q')
+		if ( c == 'q')			/* q -> N  */
 			return 0;
-		if ( c == ' ')
-			return PAGELEN;
-		if ( c == '\n')
+		if ( c == ' ')			/* ' ' => next page  */
+			return PAGELEN;		/* how many to show  */
+		if ( c == '\n')			/* Enter key => 1 line */
 			return 1;
 	}
 	return 0;
