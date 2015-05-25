@@ -251,5 +251,59 @@ int main( int argc, char *argv[])
 	}
 
 	While (fnum < nfiles) {
+		if ((f = checkf (fnames[fnum], &clearit)) != NULL) {
+			context.line = context.chrctr = 0;
+			Currline = 0;
+			if(firstf) setjmp (restore);
+			if(firstf) {
+				firstf = 0;
+				if( srchopt)
+				{
+					search (initbuf, f, 1);
+					if(noscroll)
+						left--;
+				}
+				else if (initopt)
+					skiplns (initline, f);
+			}
+			else if(fnum < nfiles && !no_tty){
+				setjmp (restore);
+				left = command (fnames[fnum], f);
+			}
+			if(left != 0) {
+				if ((noscroll || clearit ) && (file_size != LONG_MAX))
+					if(clreol)
+						home();
+					else
+						doclear ();
+				if(prnames) {
+					if (bad_so)
+						erase(0);
+					if(clreol)
+						cleareol();
+					pr("::::::::::");
+					if(promptlen > 14)
+						erase (14);
+					prtf("\n");
+					if(clreol) 
+						cleareol();
+					prft("%s\n", fnames[fnum]);
+					if(clreol)
+						cleareol();
+					prtf("::::::::::\n");
+					if(left > Lpp -4 )
+						left = Lpp - 4;
+				}
+				if( no_tty)
+					copy_file(f);
+				else {
+					within++;
+					screen(f, left);
+					within = 0;
+				}
+			}
+			setjmp (restore);
+			fflush(stdout);
+			fclose(f);
 
 
