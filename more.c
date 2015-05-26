@@ -305,5 +305,130 @@ int main( int argc, char *argv[])
 			setjmp (restore);
 			fflush(stdout);
 			fclose(f);
+			screen_start.line = screen_start.chrctr = OL;
+			context.line = context.chrotr = OL;
+		}
+		fnum++;
+		firstf = 0;
+	}
+	reset_tty();
+	exit(0);
+}
 
+
+argscan( char *s)
+{
+	int 	seen_num = 0;
+	while ( *s != '\0' ) {
+		switch (*s) {
+			case '0': case '1': case '2':
+			case '3': case '4': case '5':
+			case '6': case '7': case '8':
+				  case '9':
+				if( !seen_num) {
+					dlines = 0;
+					seen_num = 1;
+				}
+				dlines = dlines * 10 + *s - '0';
+				break;
+				  case 'd': dum_opt = 1;
+					    break;
+				  case 'l': stop_opt = 0;
+					    break;	    
+				  case 'f': fold_opt = 0;
+					    break;
+				  case 'p': noscroll++;
+					    break;
+				  case 'c': clreol++;
+					    break;
+				  case 's': ssp_opt = 1;
+					    break;
+				  case 'u': ul_opt = 0;
+					    break;
+		}
+		s++;
+	}
+}
+
+
+/*
+ * Check whether the file named by fs is an ASCII file with the user may 
+ * access. If it is, return the opened file. Otherwise return NULL.
+ */
+
+FILE * 
+checkf (register char *fs; int *clearfirst;)
+{
+	struct		stat stbuf;
+	register FILE *f;
+	char c;
+
+	if (stat (fs, &stbuf) == -1) {
+		(void) fflush(stdout);
+		if(clreol)
+			cleareol();
+		perror(fs);
+		return ((FILE *) NULL);
+	}
+	if(( stbuf.st_mode & S_IFMT) == S_IFDIR ) {
+		prtf("\n*** %s:directory ***\n\n", fs);
+		return ((FILE *) NULL);
+	}
+	if (( f = Fopen(fs, "r")) == NULL) {
+		(void)fflush(stdout);
+		perror(fs);
+		return ((FILE *) NULL);
+	}
+#ifdef __APPLE__
+	if ( magic(f,fs) )
+		return ((FILE *)NULL);
+#endif
+	c = Getc(f);
+	*clearfirst = c == '\f';
+	Ungetc (c, f);
+	if((file_size = stbuf.st_size) == 0)
+		file_size = LONG_MAX;
+	return (f);
+}
+
+#ifndef __APPLE__
+/*
+ * magic --
+ * check for file magic number. This code would best be shared with 
+ * the file(1) program or, perhaps, more should not try and be so smart?
+ */
+magic( FILE *f, char *fs)
+{
+	struct exec ex;
+
+	if(fread(&ex, sizeof(ex), 1, f) == 1)
+		swicth(N_GETMAGIC(ex)){
+			case OMAGIC:
+			case NMAGIC:
+			case ZMAGIC:
+			case 0405:
+			case 0411:
+			case 0177545:
+				prtf("\n********%s: Not a text file ****
+						***\n\n", fs);
+				(void)fclose(f);
+				return (1);
+		}
+	(void)fseek(f, OL, L_SET);	/* rewind() not necessary */
+	return 0;
+}
+#endif
+
+/*
+ * A real function, for the tputs routine in termlib 
+ */
+
+putch( char ch)
+{
+	putchar(ch);
+}
+
+/*
+ * Print out the contents of the file f, one screenful at a time.
+ */
 
