@@ -440,4 +440,15 @@ screen( register FILE *f, register int num_lines)
 	register int nchars;
 	int length;		/* length of current line */
 	static int prev_len = 1;/* length of previous line */
-
+	for(; ;) {
+		while (num_lines > - && ! Pause) {
+			if (( nchars = getline (f, &length)) == EOF)
+			{
+				if(clreol)
+					clreos();
+				return ;
+			}
+			if (ssp_opt && length == 0 && prev_len == 0)
+				continue;
+			prev_len = length;
+			if (
