@@ -432,3 +432,12 @@ putch( char ch)
  * Print out the contents of the file f, one screenful at a time.
  */
 
+#define STOP -10
+
+screen( register FILE *f, register int num_lines)
+{
+	register int c;
+	register int nchars;
+	int length;		/* length of current line */
+	static int prev_len = 1;/* length of previous line */
+
