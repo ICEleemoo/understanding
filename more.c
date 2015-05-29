@@ -451,4 +451,12 @@ screen( register FILE *f, register int num_lines)
 			if (ssp_opt && length == 0 && prev_len == 0)
 				continue;
 			prev_len = length;
-			if (
+			if (bad_so || (Senter && *Senter == ' ' ) && promptlen > 0 )
+				erase(0);
+		/* must clear before drawing line since tabs on some terminals
+		 * do not erase what they tab over.
+		 */
+			if( clreol )
+				cleareol ();
+			prbuf( Line, length );
+
